@@ -8,8 +8,8 @@ const ChatScreen = () => {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
-    // Consulta Firestore para obter mensagens
-    const messagesRef = collection(db, 'messages'); // Use collection para acessar uma coleção no Firestore
+
+    const messagesRef = collection(db, 'messages'); 
     const q = query(messagesRef, orderBy('timestamp', 'desc')); // Organizando por timestamp
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
