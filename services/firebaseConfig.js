@@ -12,11 +12,11 @@ const firebaseConfig = {
   measurementId: "G-QKS0LVHZXD"
 };
 
-
+// Inicialize o Firebase
 const app = initializeApp(firebaseConfig);
 
-
+// Obtenha as instâncias do Firebase Auth e Firestore
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-export const auth = getAuth(app);
-export { db };
+export { auth, db }; // Exporte para uso em outros arquivos

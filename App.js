@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import ChatInicial from './TelaInicial/ChatInicial';
-import HomeInicial from './TelaHome/index';
+import HomeInicial from './TelaHome/LoginScreen';
 import Rotas from './rotas';
 
 

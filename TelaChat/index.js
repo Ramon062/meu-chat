@@ -1,33 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
-import { db, auth } from '../services/firebaseConfig'; // Importando db e auth do firebaseConfig
-import { collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore'; // Funções do Firestore
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
+import { db, auth } from '../services/firebaseConfig';
+import { collection, addDoc, query, orderBy, where, onSnapshot } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged} from 'firebase/auth'
 
-const ChatScreen = () => {
+const ChatScreen = ({ route }) => {
+  const { userEmail, otherUserEmail } = route.params; // Recebe os e-mails do usuário autenticado e do outro usuário
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-
-    const messagesRef = collection(db, 'messages'); 
-    const q = query(messagesRef, orderBy('timestamp', 'desc')); // Organizando por timestamp
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map(doc => doc.data()));
+    // Atualiza o estado com o usuário autenticado
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(null);
+      }
     });
 
-    return unsubscribe; // Limpeza do listener
-  }, []);
+    // Monitorando as mensagens no Firestore
+    if (user && otherUserEmail) {
+      const chatId = [user.email, otherUserEmail].sort().join('_');
+      const messagesRef = collection(db, 'messages');
+      const q = query(messagesRef, where('chatId', '==', chatId), orderBy('timestamp', 'desc'));
+
+      const unsubscribeMessages = onSnapshot(q, (snapshot) => {
+        setMessages(snapshot.docs.map(doc => doc.data()));
+      });
+
+      return () => {
+        unsubscribeAuth();
+        unsubscribeMessages();
+      };
+    }
+  }, [user, otherUserEmail]);
 
   const sendMessage = async () => {
+    if (!user) {
+      Alert.alert("Erro", "Você precisa estar logado para enviar mensagens.");
+      return;
+    }
+
     if (message.trim()) {
       try {
-        await addDoc(collection(db, 'messages'), { // Use addDoc para adicionar um novo documento
+        const chatId = [user.email, otherUserEmail].sort().join('_');
+        await addDoc(collection(db, 'messages'), {
           text: message,
-          user: auth.currentUser.email,
+          user: user.email,
           timestamp: new Date(),
+          chatId: chatId,
         });
-        setMessage(''); // Limpa o campo de mensagem
+        setMessage('');
       } catch (error) {
         console.error("Erro ao enviar a mensagem: ", error);
       }
@@ -43,6 +68,7 @@ const ChatScreen = () => {
 
   return (
     <View style={styles.container}>
+      <Text>Conversando com: {otherUserEmail}</Text>
       <FlatList
         data={messages}
         renderItem={renderItem}

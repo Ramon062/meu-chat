@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ChatScreen from "../TelaChat";
-import HomeInicial from "../TelaHome";
+import HomeInicial from "../TelaHome/LoginScreen";
 import ChatInicial from "../TelaInicial/ChatInicial";
 import { NavigationContainer } from "@react-navigation/native";
 
